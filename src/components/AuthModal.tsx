@@ -15,30 +15,33 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   const [error, setError] = useState('');
   const [isFlipping, setIsFlipping] = useState(false);
 
+
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
+  
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
     const body = isLogin 
       ? { email, password }
       : { email, password, username };
-
+  
     try {
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(`https://mindmosaicbackend.vercel.app${endpoint}`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
       });
-
+  
       const data = await response.json();
-
+  
       if (!response.ok) {
         throw new Error(data.error || 'Authentication failed');
       }
-
+  
       localStorage.setItem('token', data.token);
       localStorage.setItem('username', data.username);
       onSuccess();
@@ -47,6 +50,45 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
       setError(error instanceof Error ? error.message : 'Authentication failed');
     }
   };
+  
+
+
+
+
+
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setError('');
+
+  //   const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+  //   const body = isLogin 
+  //     ? { email, password }
+  //     : { email, password, username };
+
+  //   try {
+  //     const response = await fetch(`http://localhost:5000${endpoint}`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(body),
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (!response.ok) {
+  //       throw new Error(data.error || 'Authentication failed');
+  //     }
+
+  //     localStorage.setItem('token', data.token);
+  //     localStorage.setItem('username', data.username);
+  //     onSuccess();
+  //     onClose();
+  //   } catch (error) {
+  //     setError(error instanceof Error ? error.message : 'Authentication failed');
+  //   }
+  // };
 
   const handleToggle = () => {
     setIsFlipping(true);

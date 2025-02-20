@@ -55,7 +55,7 @@ export default function Community() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/fetchPosts');
+        const response = await fetch('https://mindmosaicbackend.vercel.app/api/fetchPosts');
         if (!response.ok) throw new Error('Failed to fetch posts');
         const data = await response.json();
         setPosts(data);
@@ -76,7 +76,7 @@ export default function Community() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/posts', {
+      const response = await fetch('https://mindmosaicbackend.vercel.app/api/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ const handleCommentSubmit = async () => {
 
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`http://localhost:5000/api/posts/${selectedPost.id}/comments`, {
+    const response = await fetch(`https://mindmosaicbackend.vercel.app/api/posts/${selectedPost.id}/comments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
