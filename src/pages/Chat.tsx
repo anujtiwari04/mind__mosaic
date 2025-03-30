@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send } from 'lucide-react';
 import Button from '../components/Button';
+import AuthModal from '../components/AuthModal';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ChatMessage {
   id: string;
@@ -10,27 +12,69 @@ interface ChatMessage {
 }
 
 export default function Chat() {
+  const [username, setUsername] = useState("");
+  const getUserData = async () =>{
+    try{
+      const storedUsername = await localStorage.getItem('username');
+      if(storedUsername){
+        setUsername(storedUsername);
+        console.log("Username retrived is in chat: ", storedUsername);
+      }
+    }catch (error){
+      console.error('Error fetching user data:', error);
+    }
+  }
+  useEffect(() => {
+    getUserData();
+  }, []);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: '1',
-      content: "Hello! I'm your AI mental health companion. How are you feeling today?",
-      sender: 'ai',
-      timestamp: new Date('2024-03-10T10:00:00')
+      id: "1",
+      content: `Hello! I'm your AI mental health companion. How are you feeling today?`, // No username initially
+      sender: "ai",
+      timestamp: new Date("2024-03-10T10:00:00"),
     },
     {
-      id: '2',
+      id: "2",
       content: "I'm here to listen and support you. Feel free to share what's on your mind.",
-      sender: 'ai',
-      timestamp: new Date('2024-03-10T10:00:05')
-    }
+      sender: "ai",
+      timestamp: new Date("2024-03-10T10:00:05"),
+    },
   ]);
+  
+  // Update messages after username is retrieved
+  useEffect(() => {
+    if (username) {
+      setMessages((prevMessages) => [
+        {
+          id: "1",
+          content: `Hello ${username}!!, I'm your AI mental health companion. How are you feeling today?`,
+          sender: "ai",
+          timestamp: new Date(),
+        },
+        ...prevMessages.slice(1),
+      ]);
+    }
+  }, [username]);
   const [newMessage, setNewMessage] = useState('');
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+
+  
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
+    // Use global auth state
+    const { isLoggedIn, setIsLoggedIn } = useAuth();
+  const handleAuthSuccess = () => {
+    setIsLoggedIn(true);
+  };
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Replace with your actual API key and endpoint.
   const apiKey = import.meta.env.VITE_API_KEY;
   const apiUrl = import.meta.env.VITE_API_URL;
+
+
 
 
   // Build a prompt with instructions for bullet-point answers and word limits.
@@ -155,6 +199,7 @@ AI:`;
   };
 
   return (
+    isLoggedIn ? 
     <div className="min-h-[80vh] flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl shadow-lg animate-fadeIn relative">
       {/* Chat Messages Container */}
       <div
@@ -221,129 +266,15 @@ AI:`;
           </Button>
         </div>
       </div>
-    </div>
+           
+    </div> 
+    
+    : (
+      <AuthModal
+        isOpen={true} // Always open when user is not logged in
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={handleAuthSuccess}
+      />
+    )
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { useState } from 'react';
-// import { Send } from 'lucide-react';
-// import Button from '../components/Button';
-
-// interface ChatMessage {
-//   id: string;
-//   content: string;
-//   sender: 'user' | 'ai';
-//   timestamp: Date;
-// }
-
-// export default function Chat() {
-//   const [messages, setMessages] = useState<ChatMessage[]>([
-//     {
-//       id: '1',
-//       content: "Hello! I'm your AI mental health companion. How are you feeling today?",
-//       sender: 'ai',
-//       timestamp: new Date('2024-03-10T10:00:00')
-//     },
-//     {
-//       id: '2',
-//       content: "I'm here to listen and support you. Feel free to share what's on your mind.",
-//       sender: 'ai',
-//       timestamp: new Date('2024-03-10T10:00:05')
-//     }
-//   ]);
-//   const [newMessage, setNewMessage] = useState('');
-
-//   const handleSend = () => {
-//     if (newMessage.trim() === '') return;
-
-//     const message: ChatMessage = {
-//       id: Date.now().toString(),
-//       content: newMessage,
-//       sender: 'user',
-//       timestamp: new Date(),
-//     };
-
-//     setMessages([...messages, message]);
-//     setNewMessage('');
-//   };
-
-//   const handleKeyPress = (e: React.KeyboardEvent) => {
-//     if (e.key === 'Enter' && !e.shiftKey) {
-//       e.preventDefault();
-//       handleSend();
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-[80vh] flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl shadow-lg animate-fadeIn">
-//       {/* Chat Messages */}
-//       <div className="flex-1 p-4 overflow-y-auto space-y-4">
-//         {messages.map((message) => (
-//           <div
-//             key={message.id}
-//             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-//           >
-//             <div
-//               className={`max-w-[80%] md:max-w-[60%] p-4 rounded-2xl ${
-//                 message.sender === 'user'
-//                   ? 'bg-emerald-600 text-white ml-auto rounded-tr-none'
-//                   : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white mr-auto rounded-tl-none'
-//               }`}
-//             >
-//               <p className="text-sm md:text-base">{message.content}</p>
-//               <span className="text-xs opacity-75 mt-1 block">
-//                 {new Date(message.timestamp).toLocaleTimeString([], {
-//                   hour: '2-digit',
-//                   minute: '2-digit'
-//                 })}
-//               </span>
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Message Input */}
-//       <div className="p-4 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
-//         <div className="flex items-center gap-2">
-//           <textarea
-//             value={newMessage}
-//             onChange={(e) => setNewMessage(e.target.value)}
-//             onKeyDown={handleKeyPress}
-//             placeholder="Type your message..."
-//             className="flex-1 resize-none rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent dark:text-white"
-//             rows={1}
-//           />
-//           <Button
-//             onClick={handleSend}
-//             disabled={newMessage.trim() === ''}
-//             className="p-4 aspect-square rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-//           >
-//             <Send className="w-5 h-5" />
-//           </Button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }

@@ -69,7 +69,7 @@ export default function Home() {
               size="lg"
               onClick={() => navigate('/dashboard')}
             >
-              Begin Assessment
+              Let's Go!!
             </Button>
           </div>
         </div>
