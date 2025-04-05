@@ -3,6 +3,7 @@ import { Send, Eye, EyeOff, MessageCircle, X } from 'lucide-react';
 import Button from '../components/Button';
 import AuthModal from '../components/AuthModal';
 import { useAuth } from '../contexts/AuthContext';
+import {Base} from '../Backend/BaseUrl';
 interface Post {
   id: string;
   content: string;
@@ -56,8 +57,7 @@ export default function Community() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/fetchPosts');
-        // const response = await fetch('https://mindmosaicbackend.vercel.app/api/fetchPosts');
+        const response = await fetch(`${Base}fetchPosts`);
         if (!response.ok) throw new Error('Failed to fetch posts');
         const data = await response.json();
         setPosts(data);
@@ -93,8 +93,7 @@ useEffect(() => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/posts', {
-        // const response = await fetch('https://mindmosaicbackend.vercel.app/api/posts', {
+      const response = await fetch(`${Base}posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +125,7 @@ useEffect(() => {
     try {
       const token = localStorage.getItem('token');
       // const response = await fetch(`https://mindmosaicbackend.vercel.app/api/posts/${selectedPost.id}/comments`, {
-      const response = await fetch(`http://localhost:5000/api/posts/${selectedPost.id}/comments`, {
+      const response = await fetch(`${Base}posts/${selectedPost.id}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -172,7 +171,7 @@ useEffect(() => {
   const openCommentModal = (post: Post) => {
 
     setSelectedPost(post);
-    // setIsModalOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleAuthSuccess = () => {
