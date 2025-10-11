@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import { ArrowRight, Brain, Activity, Heart, Sun, Coffee, Star, Quote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useGoogleGenAI } from '../Hooks/useGoogleGenAI';
 
 interface Question {
   id: number;
@@ -31,36 +32,6 @@ const questions: Question[] = [
     text: 'How would you rate your sleep quality in the past week?',
     options: ['Excellent', 'Good', 'Fair', 'Poor', 'Very poor'],
   },
-  {
-    id: 3,
-    text: 'How often do you feel overwhelmed by your daily responsibilities?',
-    options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Always'],
-  },
-  {
-    id: 4,
-    text: 'How would you describe your social connections and support system?',
-    options: ['Very strong', 'Strong', 'Moderate', 'Weak', 'Very weak'],
-  },
-  {
-    id: 5,
-    text: 'How often do you experience difficulty concentrating?',
-    options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Always'],
-  },
-  {
-    id: 6,
-    text: 'How would you rate your overall stress level?',
-    options: ['Very low', 'Low', 'Moderate', 'High', 'Very high'],
-  },
-  {
-    id: 7,
-    text: 'How often do you engage in activities you enjoy?',
-    options: ['Daily', 'Several times a week', 'Weekly', 'Monthly', 'Rarely'],
-  },
-  {
-    id: 8,
-    text: 'How would you rate your ability to manage your emotions?',
-    options: ['Excellent', 'Good', 'Fair', 'Poor', 'Very poor'],
-  },
 ];
 
 const quotes = [
@@ -81,10 +52,12 @@ export default function Assessment() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [randomQuote, setRandomQuote] = useState('');
   const navigate = useNavigate();
+
+  // Use the improved hook
+  const { generateContent, isLoading, error } = useGoogleGenAI();
 
   useEffect(() => {
     if (isLoading) {
@@ -113,60 +86,45 @@ export default function Assessment() {
       setSelectedAnswer(null);
     } else {
       setIsCompleted(true);
-      handleSubmit();
+      handleSubmit(newAnswers);
     }
   };
 
-  const generatePrompt = () => {
-    let prompt = "Based on the following mental health questionnaire responses, provide 6 concise, one-line suggestions for improving mental well-being:\n\n";
-    questions.forEach((q, index) => {
-      prompt += `${q.text}: ${answers.find(a => a.questionId === q.id)?.answer}\n`;
+  const generatePrompt = (submittedAnswers: Answer[]) => {
+    let prompt = "You are a mental health expert. Based on the following questionnaire responses, generate EXACTLY 6 actionable suggestions for improving mental well-being.\n\n";
+    
+    prompt += "Questionnaire responses:\n";
+    questions.forEach((q) => {
+      const answer = submittedAnswers.find(a => a.questionId === q.id)?.answer;
+      prompt += `- ${q.text}: ${answer}\n`;
     });
-    prompt += "\nPlease provide 6 brief, actionable suggestions, one per line:";
+    
+    prompt += "\nIMPORTANT INSTRUCTIONS:\n";
+    prompt += "- Provide EXACTLY 6 suggestions, no more, no less\n";
+    prompt += "- Each suggestion should be a complete, actionable sentence\n";
+    prompt += "- Start each suggestion directly with the number (1., 2., 3., etc.)\n";
+    prompt += "- Do NOT include any introductory text, headers, or concluding remarks\n";
+    prompt += "- Do NOT include phrases like 'Here are suggestions' or 'Based on your responses'\n";
+    prompt += "- Each suggestion should be brief but clear (aim for 10-20 words)\n";
+    prompt += "- Do NOT include line numbers (e.g. '1.', '2.', etc.)\n";
+    prompt += "- Focus on practical, implementable actions\n\n";
+    prompt += "Format example:\n";
+    prompt += "Establish a consistent sleep schedule every day, even on weekends.\n";
+    prompt += "Create a relaxing bedtime routine to help your mind wind down.\n\n";
+    prompt += "Now provide your 6 suggestions:";
+    
+    console.log("submited prompt:", prompt);
     return prompt;
   };
 
-  const handleSubmit = async () => {
-    setIsLoading(true);
-
-    const apiKey = import.meta.env.VITE_API_KEY;
-    const apiUrl = import.meta.env.VITE_API_URL;
-
-
-
-    const requestBody = {
-      contents: [
-        {
-          parts: [
-            {
-              text: generatePrompt()
-            }
-          ]
-        }
-      ]
-    };
-
+  const handleSubmit = async (submittedAnswers: Answer[]) => {
     try {
-      const response = await fetch(`${apiUrl}?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const generatedText = data.candidates[0].content.parts[0].text;
+      const prompt = generatePrompt(submittedAnswers);
+      const generatedText = await generateContent({ prompt });
       setResponse(generatedText);
-    } catch (error) {
-      console.error('There was a problem with the fetch operation:', error);
-      setResponse('Error fetching data');
-    } finally {
-      setIsLoading(false);
+    } catch (err) {
+      console.error('Error generating suggestions:', err);
+      setResponse('Error generating suggestions. Please try again.');
     }
   };
 
@@ -181,7 +139,13 @@ export default function Assessment() {
   const currentQuestion = questions[currentQuestionIndex];
 
   if (isCompleted) {
-    const suggestions = response?.split('\n').filter(line => line.trim()) || [];
+    // Parse suggestions and filter to only include numbered lines
+    const suggestions = response
+      ?.split('\n')
+      .map(line => line.trim())
+      .filter(line => /^\d+\./.test(line)) // Only keep lines starting with a number and period
+      .slice(0, 6) // Ensure max 6 suggestions
+      || [];
 
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 space-y-8 animate-fadeIn">
@@ -199,6 +163,13 @@ export default function Assessment() {
                   {randomQuote}
                 </p>
               </div>
+            </div>
+          ) : error ? (
+            <div className="max-w-2xl mx-auto p-6 bg-red-50 dark:bg-red-900/20 rounded-xl">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+              <Button onClick={handleRetake} className="mt-4">
+                Try Again
+              </Button>
             </div>
           ) : (
             <>
@@ -225,7 +196,6 @@ export default function Assessment() {
               <div className="flex justify-center space-x-4 mt-8">
                 <Button
                   onClick={handleRetake}
-                  // variant="secondary"
                   size="lg"
                   className="font-semibold"
                 >
