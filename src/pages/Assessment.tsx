@@ -32,6 +32,36 @@ const questions: Question[] = [
     text: 'How would you rate your sleep quality in the past week?',
     options: ['Excellent', 'Good', 'Fair', 'Poor', 'Very poor'],
   },
+   {
+     id: 3,
+     text: 'How often do you feel overwhelmed by your daily responsibilities?',
+     options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Always'],
+   },
+   {
+     id: 4,
+     text: 'How would you describe your social connections and support system?',
+     options: ['Very strong', 'Strong', 'Moderate', 'Weak', 'Very weak'],
+   },
+   {
+     id: 5,
+     text: 'How often do you experience difficulty concentrating?',
+     options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Always'],
+   },
+   {
+     id: 6,
+     text: 'How would you rate your overall stress level?',
+     options: ['Very low', 'Low', 'Moderate', 'High', 'Very high'],
+   },
+   {
+     id: 7,
+     text: 'How often do you engage in activities you enjoy?',
+     options: ['Daily', 'Several times a week', 'Weekly', 'Monthly', 'Rarely'],
+   },
+   {
+     id: 8,
+     text: 'How would you rate your ability to manage your emotions?',
+     options: ['Excellent', 'Good', 'Fair', 'Poor', 'Very poor'],
+   },
 ];
 
 const quotes = [
